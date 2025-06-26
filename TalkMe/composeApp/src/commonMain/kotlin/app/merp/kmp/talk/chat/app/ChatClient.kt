@@ -2,15 +2,16 @@ package app.merp.kmp.talk.chat.app
 
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
-import io.ktor.util.logging.*
+import io.ktor.client.request.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 
 class ChatClient {
 
-    private val client = HttpClient() {
+    private val client = HttpClient {
         install(WebSockets)
     }
 
@@ -18,7 +19,8 @@ class ChatClient {
     val message: StateFlow<List<String>> = _message
 
 
-    private var session: DefaultClientWebSocketSession? = null
+    private var session: WebSocketSession? = null
+    private var receiveJob: Job? = null
 
     /*suspend fun connect(url: String = "ws://10.0.2.2:8000/ws/chat") {
         client.webSocket(urlString = url) {
@@ -34,7 +36,7 @@ class ChatClient {
                             *//*is Frame.Binary -> TODO()
                         is Frame.Close -> TODO()
                         is Frame.Ping -> TODO()
-                        is Frame.Pong -> TODO()*//*
+                        is Frame.Pong -> TODO()
                             else -> TODO()
                         }
                     }
@@ -45,34 +47,48 @@ class ChatClient {
         }
     }*/
 
-    suspend fun connect(url: String) {
-        client.webSocket(urlString = url) {
-            session = this
-            try {
-                for (frame in incoming) {
-                    if (frame is Frame.Text) {
-                        val updated = _message.value + frame.readText()
-                        _message.emit(updated)
+    suspend fun connection(url: String, username: String) {
+        try {
+            session = client.webSocketSession {
+                url(url)
+            }
+
+            session?.let { wsSession ->
+                // 1. Send username as initial message
+                wsSession.send(Frame.Text(username))
+
+                // 2. Start listening in coroutine
+                receiveJob = CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        for (frame in wsSession.incoming) {
+                            if (frame is Frame.Text) {
+                                val newMessage = frame.readText()
+                                _message.update { it + newMessage }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        _message.update { it + "❌ Error receiving: ${e.message}" }
+                        println("TALK -> Error receiving -> ${e.message}")
                     }
                 }
-            } catch (e: Exception) {
-                _message.emit(_message.value + "Connection closed: ${e.message}")
-                println("TALK -> Connection error -> ${e.message}")
             }
+        } catch (e: Exception) {
+            _message.update { it + "❌ Failed to connect: ${e.message}" }
+            println("TALK -> Failed to connect -> ${e.message}")
         }
     }
 
     suspend fun sendMessage(text: String) {
         try {
-            println("TALK -> Sending messages!")
             session?.send(Frame.Text(text))
         } catch (e: Exception) {
-            //_message.emit(_message.value + "Connection closed: ${e.message}")
+            _message.emit(_message.value + "Connection issue while sending message: ${e.message}")
             println("TALK -> ERROR at -> sendMessage: ${e.message}")
         }
     }
 
     fun close() {
+        receiveJob?.cancel()
         client.close()
     }
 }
