@@ -1,19 +1,28 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
+import java.util.*
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.sqldelight)
 }
 
 kotlin {
     androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+
+    // Database
+    sqldelight{
+        databases{
+            create(name = "ChatDatabase"){
+                this.packageName.set("app.merp.kmp.talk.chat.app.db")
+            }
         }
     }
 
@@ -25,6 +34,8 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            // Required when using NativeSQLiteDriver
+            //linkerOpts.add("-lsqlite3")
         }
     }
 
@@ -34,6 +45,8 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
+
+            implementation(libs.android.driver)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -49,8 +62,15 @@ kotlin {
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.websockets)
-            // implementation(libs.ktor.client.darwin) for IOS main
+            implementation(libs.runtime)
+            implementation(libs.kotlinx.datetime) // for Datetime
         }
+
+        /*iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+            implementation(libs.native.driver)
+        }*/
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -103,3 +123,10 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
+/*sqldelight{
+        databases{
+            create(name = "ChatDatabase"){
+                this.packageName.set("app.merp.kmp.talk.chat.app.db")
+            }
+        }
+    }*/

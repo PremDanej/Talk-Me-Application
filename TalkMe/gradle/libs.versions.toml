@@ -15,6 +15,10 @@ junit = "4.13.2"
 kotlin = "2.1.21"
 ktorVersion = "2.3.4"
 coroutineVersion = "1.7.3"
+roomRuntime = "2.7.2"
+ksp = "2.0.21-1.0.27"
+sqlDelight = "2.0.1"
+dateTimeVersion = "0.6.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -36,9 +40,19 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorVersion" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktorVersion" }
 
+# Database
+android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqlDelight" }
+native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqlDelight" }
+runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqlDelight" }
+
+# DateTime
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "dateTimeVersion" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
