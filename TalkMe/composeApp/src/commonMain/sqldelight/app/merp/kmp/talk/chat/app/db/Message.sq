@@ -1,0 +1,16 @@
+CREATE TABLE messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL,
+    sender TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+selectAll:
+SELECT * FROM messages ORDER BY timestamp DESC LIMIT :limit OFFSET :offset;
+
+insertMessage:
+INSERT INTO messages(content, sender, timestamp)
+VALUES (?, ?, ?);
+
+clearMessages:
+DELETE FROM messages;
